@@ -1,0 +1,467 @@
+package bigint;
+
+/**
+ * This class encapsulates a BigInteger, i.e. a positive or negative integer with 
+ * any number of digits, which overcomes the computer storage length limitation of 
+ * an integer.
+ * 
+ */
+public class BigInteger {
+
+	/**
+	 * True if this is a negative integer
+	 */
+	boolean negative;
+	
+	/**
+	 * Number of digits in this integer
+	 */
+	int numDigits;
+	
+	/**
+	 * Reference to the first node of this integer's linked list representation
+	 * NOTE: The linked list stores the Least Significant Digit in the FIRST node.
+	 * For instance, the integer 235 would be stored as:
+	 *    5 --> 3  --> 2
+	 *    
+	 * Insignificant digits are not stored. So the integer 00235 will be stored as:
+	 *    5 --> 3 --> 2  (No zeros after the last 2)        
+	 */
+	DigitNode front;
+	
+	/**
+	 * Initializes this integer to a positive number with zero digits, in other
+	 * words this is the 0 (zero) valued integer.
+	 */
+	public BigInteger() {
+		negative = false;
+		numDigits = 0;
+		front = null;
+	}
+	
+	/**
+	 * Parses an input integer string into a corresponding BigInteger instance.
+	 * A correctly formatted integer would have an optional sign as the first 
+	 * character (no sign means positive), and at least one digit character
+	 * (including zero). 
+	 * Examples of correct format, with corresponding values
+	 *      Format     Value
+	 *       +0            0
+	 *       -0            0
+	 *       +123        123
+	 *       1023       1023
+	 *       0012         12  
+	 *       0             0
+	 *       -123       -123
+	 *       -001         -1
+	 *       +000          0
+	 *       
+	 * Leading and trailing spaces are ignored. So "  +123  " will still parse 
+	 * correctly, as +123, after ignoring leading and trailing spaces in the input
+	 * string.
+	 * 
+	 * Spaces between digits are not ignored. So "12  345" will not parse as
+	 * an integer - the input is incorrectly formatted.
+	 * 
+	 * An integer with value 0 will correspond to a null (empty) list - see the BigInteger
+	 * constructor
+	 * 
+	 * @param integer Integer string that is to be parsed
+	 * @return BigInteger instance that stores the input integer.
+	 * @throws IllegalArgumentException If input is incorrectly formatted
+	 */
+	
+	
+	
+
+	public static BigInteger parse(String integer) 
+	throws IllegalArgumentException {
+		BigInteger B = new BigInteger();
+		B.negative = false; // negative
+		int digit = 0;
+		int cnt = 0; //numDigits
+		int i = 0;
+		DigitNode L = null; //front
+		
+		while (i < integer.length() && (!(Character.isDigit(integer.charAt(i))) || integer.charAt(i) == '0')) {
+			if (integer.charAt(i) == '-') {
+				B.negative = true;
+				i++;
+				break;
+			}
+			if (integer.charAt(i) == '+') {
+				i++;
+				break;
+			}
+			i++;
+		}
+
+		while (i < integer.length() && Character.isDigit(integer.charAt(i))) {
+				
+			digit = integer.charAt(i) - '0';
+			L = new DigitNode(digit,L);
+			i++;
+			cnt++;
+		}
+
+		while (i < integer.length() && (!(Character.isDigit(integer.charAt(i))) )) {
+			i++;	
+		}
+		
+		if (i != integer.length() ) {
+			throw new IllegalArgumentException();
+		}
+		
+		B.numDigits = cnt;
+		B.front = L;
+		
+		return B; 
+		
+		// following line is a placeholder - compiler needs a return
+		// modify it according to need
+	}
+	
+	/**
+	 * Adds the first and second big integers, and returns the result in a NEW BigInteger object. 
+	 * DOES NOT MODIFY the input big integers.
+	 * 
+	 * NOTE that either or both of the input big integers could be negative.
+	 * (Which means this method can effectively subtract as well.)
+	 * 
+	 * @param first First big integer
+	 * @param second Second big integer
+	 * @return Result big integer
+	 */
+	private static DigitNode reverse(DigitNode node) {
+		DigitNode crnt = node;
+		DigitNode prev = null; DigitNode next = null;
+		DigitNode head = null;
+		while (crnt != null) {
+			next = crnt.next;
+			crnt.next = prev;
+			prev = crnt;
+			crnt = next;
+		}
+		head = prev;
+		
+		
+		return head;
+	}
+	
+	
+	private static boolean isBigger(BigInteger first, BigInteger second) {
+		//returns true if First > Second
+	
+		
+		if (first.numDigits > second.numDigits) {
+			return true;
+		}
+		if (second.numDigits > first.numDigits) {
+			return false;
+		}
+		
+		DigitNode crnt1 = reverse(first.front);
+		DigitNode crnt2 = reverse(second.front);
+		
+		while (crnt1 != null) {
+			if (crnt1.digit > crnt2.digit) {
+				return true;
+			}
+			else {
+				crnt1 = crnt1.next;
+				crnt2 = crnt2.next;
+			}
+		}
+		
+		return false;
+	}	
+	
+	private static BigInteger subtract(BigInteger first, BigInteger second) {
+		BigInteger B = new BigInteger();
+		if (first == second) {
+			return B;
+		}
+		if (!(isBigger(first,second))) {
+			return add(second,first);
+		}
+		
+		B = new BigInteger();
+		
+		
+		DigitNode crnt1 = first.front;
+		DigitNode crnt2 = second.front;
+		DigitNode temp = null;
+		int smallSum = 0;
+		DigitNode prev = null;
+		DigitNode front = null;
+		int cnt = 0;
+		boolean bool = true;
+	
+		
+		while (crnt1 != null || crnt2 != null) {
+			if (crnt1 == null) {
+				crnt1 = new DigitNode(0,null);
+			}
+			if (crnt2 == null) {
+				crnt2 = new DigitNode(0,null);
+			}
+			
+			
+			if (crnt1.digit - crnt2.digit < 0) {
+				smallSum = (crnt1.digit + 10) - crnt2.digit;
+				//System.out.println(smallSum);
+				temp = crnt1;
+				while (bool) {
+					temp = temp.next;
+					if (temp.digit - 1 >= 0) {
+						temp.digit = temp.digit - 1;
+						//System.out.println(temp);
+						bool = false;
+						
+					}
+				}
+				bool = true;
+				
+			} else {
+				smallSum = crnt1.digit - crnt2.digit;
+			}
+
+			
+			
+			
+			if (prev == null) {
+				front = new DigitNode(smallSum, null);
+				prev = front;
+			}
+			else {
+				prev.next = new DigitNode(smallSum, null);
+				prev = prev.next;
+			}
+			crnt1 = crnt1.next;
+			crnt2 = crnt2.next;
+			cnt++;
+
+		}
+		
+		if (first.negative) {
+			B.negative = true;
+		} else {
+			B.negative = false;
+		}
+		
+		B.front = front;
+		B.numDigits = cnt;
+		
+	
+		return B;
+	}
+	
+	
+	public static BigInteger add(BigInteger first, BigInteger second) {
+
+		DigitNode front = null;
+		DigitNode prev = null;
+		int carry = 0;
+		int smallSum = 0;	
+		int cnt = 0;
+		DigitNode crnt1 = first.front; //FIND WAY TO REVERSE THESE LL
+		DigitNode crnt2 = second.front;
+		
+		BigInteger B = new BigInteger();
+		
+		if ((first.negative || second.negative) && !(first.negative && second.negative)) {
+			return subtract(first,second);
+		}
+		
+		while (crnt1 != null || crnt2 != null) {
+			if (crnt1 == null) {
+				crnt1 = new DigitNode(0,null);
+			}
+			if (crnt2 == null) {
+				crnt2 = new DigitNode(0,null);
+			}
+			
+			if (crnt1.digit + crnt2.digit + carry >= 10) {
+				smallSum = ((crnt1.digit + crnt2.digit + carry) % 10);
+				carry = 1;
+			}
+			else {
+				smallSum = crnt1.digit + crnt2.digit + carry;
+				carry = 0;
+			}
+
+			if (prev == null) {
+				front = new DigitNode(smallSum, null);
+				prev = front;
+			}
+			else {
+				prev.next = new DigitNode(smallSum, null);
+				prev = prev.next;
+			}
+			crnt1 = crnt1.next;
+			crnt2 = crnt2.next;
+			cnt++;
+
+		}
+
+		if (carry == 1) {
+			prev.next = new DigitNode(1, null);
+			cnt++;
+		}
+		
+		B.front = front;
+		B.negative = false;
+		B.numDigits = cnt;
+		if (first.negative && second.negative) {
+			B.negative = true;
+		}
+		
+		return B;
+		
+		// following line is a placeholder - compiler needs a return
+		// modify it according to need 
+	}
+	
+	/**
+	 * Returns the BigInteger obtained by multiplying the first big integer
+	 * with the second big integer
+	 * 
+	 * This method DOES NOT MODIFY either of the input big integers
+	 * 
+	 * @param first First big integer
+	 * @param second Second big integer
+	 * @return A new BigInteger which is the product of the first and second big integers
+	 */
+	public static BigInteger multiply(BigInteger first, BigInteger second) {
+		DigitNode front = null;
+		DigitNode prev = null;
+		int carry = 0;
+		int smallProd = 0;	
+		int cnt = 0;
+		DigitNode crnt1;
+		DigitNode crnt2;
+		int i = 0;
+		int numDig = 0;
+		//int totalDig = 0;
+		
+		BigInteger product = new BigInteger();
+		BigInteger temp = new BigInteger();
+		temp.negative = false;
+		
+		if (first.numDigits < second.numDigits) {
+			crnt1 = first.front; 
+			crnt2 = second.front;
+		} else {
+			crnt2 = first.front;
+			crnt1 = second.front;
+		}
+		
+		while (crnt1 != null) {
+			
+			if (first.numDigits < second.numDigits) {
+				//crnt1 = first.front; 
+				crnt2 = second.front;
+			} else {
+				crnt2 = first.front;
+				//crnt1 = second.front;
+			}
+			
+			while (i < cnt) {
+				if (prev == null) {
+					front = new DigitNode(0, null);
+					prev = front;
+				}
+				else {
+					prev.next = new DigitNode(0, null);
+					prev = prev.next;
+				}
+				
+				i++;
+				//System.out.print(prev);
+			}
+			
+
+			while (crnt2 != null) {
+				
+				
+				
+				if ((((crnt1.digit)*(crnt2.digit))+carry) >= 10) {
+					smallProd = ((crnt1.digit*crnt2.digit) + carry)%10;
+					carry = (((crnt1.digit)*(crnt2.digit)) + carry)/10;
+					//System.out.print(smallProd + ":");
+				} else {
+					smallProd = (((crnt1.digit)*(crnt2.digit)) + carry);
+					carry = 0;
+					//System.out.print(smallProd + ":");
+				}
+				
+				if (prev == null) {
+					front = new DigitNode(smallProd, null);
+					prev = front;
+				}
+				else {
+					prev.next = new DigitNode(smallProd, null);
+					prev = prev.next;
+				}
+				if (crnt2.next == null && carry != 0) {
+					prev.next = new DigitNode(carry, null);
+					prev = prev.next;
+					numDig++;
+					
+				}
+				
+				crnt2 = crnt2.next;
+				numDig++;
+				
+			}
+			
+			crnt1 = crnt1.next;
+			cnt++;
+			i = 0;
+			carry = 0;
+			temp.front = front;
+			temp.numDigits = numDig;
+			//System.out.println(temp); //
+			product = add(temp,product);
+			temp = new BigInteger();
+			numDig = 0;
+			prev = null;
+			front = null;
+			//System.out.println(crnt1 + " " + crnt2);
+			
+		}
+		
+		if ((first.negative || second.negative) && !(first.negative && second.negative)) {
+			product.negative = true;
+		}
+		
+		return product;
+	
+		// following line is a placeholder - compiler needs a return
+		// modify it according to need 
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	
+	
+	
+	
+	
+	public String toString() {
+		if (front == null) {
+			return "0";
+		}
+		String retval = front.digit + "";
+		for (DigitNode curr = front.next; curr != null; curr = curr.next) {
+				retval = curr.digit + retval;
+		}
+		
+		if (negative) {
+			retval = '-' + retval;
+		}
+		return retval;
+	}
+	
+}
